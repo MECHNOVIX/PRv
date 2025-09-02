@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Live Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: linear-gradient(120deg, #ff9933, #fff8f0, #138808);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      background: #000080;
+      color: white;
+      padding: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+    }
+    .card {
+      background: white;
+      margin: 20px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+    }
+    .card h3 {
+      margin: 0;
+      color: #000080;
+    }
+    .status-btn {
+      background: #138808;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+    .status-btn.off {
+      background: #b22222;
+    }
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>🚖 Vehicle Live Dashboard 🇮🇳</header>
+
+  <div class="card">
+    <h3>Vehicle No: <span id="vehNo">HR********7</span></h3>
+    <p><b>Owner:</b> Kumar</p>
+    <p><b>Vehicle Type:</b> Taxi</p>
+
+    <button id="toggleBtn" class="status-btn off">Vehicle OFFLINE</button>
+
+    <div id="routeSection" style="display:none;">
+      <h4>Select Destination</h4>
+      <select id="endPoint">
+        <option value="28.61,77.20">Delhi</option>
+        <option value="28.47,77.03">Gurgaon</option>
+        <option value="29.39,76.97">Panipat</option>
+        <option value="27.18,78.01">Agra</option>
+      </select>
+      <button id="routeBtn" class="status-btn">Show Route</button>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize map centered on Faridabad
+    const map = L.map('map').setView([28.40, 77.32], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let vehicleMarker = null;
+    let routeLine = null;
+    const vehicleIcon = L.divIcon({ className: 'custom-icon', html: "🚖", iconSize: [30,30] });
+
+    const toggleBtn = document.getElementById("toggleBtn");
+    const routeSection = document.getElementById("routeSection");
+
+    // Fixed "live" location (Faridabad)
+    const liveLatLng = [28.40, 77.32];
+
+    // Toggle vehicle availability
+    toggleBtn.addEventListener("click", () => {
+      if (toggleBtn.classList.contains("off")) {
+        toggleBtn.classList.remove("off");
+        toggleBtn.innerText = "Vehicle ONLINE";
+        toggleBtn.style.background = "#138808";
+        routeSection.style.display = "block";
+
+        // Add vehicle marker at Faridabad
+        vehicleMarker = L.marker(liveLatLng, { icon: vehicleIcon }).addTo(map);
+        vehicleMarker.bindPopup("<b>Kumar's Taxi</b><br>Status: Online").openPopup();
+        map.setView(liveLatLng, 12);
+
+      } else {
+        toggleBtn.classList.add("off");
+        toggleBtn.innerText = "Vehicle OFFLINE";
+        toggleBtn.style.background = "#b22222";
+        routeSection.style.display = "none";
+
+        if (vehicleMarker) { map.removeLayer(vehicleMarker); vehicleMarker = null; }
+        if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+      }
+    });
+
+    // Show route
+    document.getElementById("routeBtn").addEventListener("click", () => {
+      if (routeLine) { map.removeLayer(routeLine); }
+
+      const endCoords = document.getElementById("endPoint").value.split(",");
+      const endLatLng = [parseFloat(endCoords[0]), parseFloat(endCoords[1])];
+
+      routeLine = L.polyline([liveLatLng, endLatLng], { color: "blue", weight: 5 }).addTo(map);
+      map.fitBounds(routeLine.getBounds());
+    });
+  </script>
+</body>
+</html>
